@@ -1,0 +1,38 @@
+{
+  "buildFiles": [
+    "C:\\Users\\admin\\AppData\\Local\\Android\\Sdk\\ndk-bundle\\build\\cmake\\android.toolchain.cmake",
+    "C:\\Users\\admin\\AppData\\Local\\Android\\Sdk\\ndk-bundle\\build\\cmake\\platforms.cmake",
+    "D:\\myProject\\qyx_flutter_media\\android\\CMakeLists.txt",
+    "D:\\myProject\\qyx_flutter_media\\android\\src\\main\\jni\\libyuv\\CMakeLists.txt",
+    "D:\\myProject\\qyx_flutter_media\\android\\src\\main\\jni\\libyuv\\CM_linux_packages.cmake"
+  ],
+  "cleanCommands": [
+    "C:\\Users\\admin\\AppData\\Local\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\cmake.exe --build D:\\myProject\\qyx_flutter_media\\android\\.externalNativeBuild\\cmake\\release\\x86_64 --target clean"
+  ],
+  "libraries": {
+    "yuv_shared-Release-x86_64": {
+      "artifactName": "yuv_shared",
+      "buildCommand": "C:\\Users\\admin\\AppData\\Local\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\cmake.exe --build D:\\myProject\\qyx_flutter_media\\android\\.externalNativeBuild\\cmake\\release\\x86_64 --target yuv_shared",
+      "abi": "x86_64",
+      "output": "D:\\myProject\\qyx_flutter_media\\android\\build\\intermediates\\cmake\\release\\obj\\x86_64\\libyuv.so"
+    },
+    "yuv-Release-x86_64": {
+      "artifactName": "yuv",
+      "buildCommand": "C:\\Users\\admin\\AppData\\Local\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\cmake.exe --build D:\\myProject\\qyx_flutter_media\\android\\.externalNativeBuild\\cmake\\release\\x86_64 --target yuv",
+      "abi": "x86_64",
+      "output": "D:\\myProject\\qyx_flutter_media\\android\\.externalNativeBuild\\cmake\\release\\x86_64\\build\\libyuv.a"
+    },
+    "yuvutil-Release-x86_64": {
+      "artifactName": "yuvutil",
+      "buildCommand": "C:\\Users\\admin\\AppData\\Local\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\cmake.exe --build D:\\myProject\\qyx_flutter_media\\android\\.externalNativeBuild\\cmake\\release\\x86_64 --target yuvutil",
+      "abi": "x86_64",
+      "output": "D:\\myProject\\qyx_flutter_media\\android\\build\\intermediates\\cmake\\release\\obj\\x86_64\\libyuvutil.so"
+    },
+    "yuvconvert-Release-x86_64": {
+      "artifactName": "yuvconvert",
+      "buildCommand": "C:\\Users\\admin\\AppData\\Local\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\cmake.exe --build D:\\myProject\\qyx_flutter_media\\android\\.externalNativeBuild\\cmake\\release\\x86_64 --target yuvconvert",
+      "abi": "x86_64",
+      "output": "D:\\myProject\\qyx_flutter_media\\android\\.externalNativeBuild\\cmake\\release\\x86_64\\build\\yuvconvert"
+    }
+  }
+}
