@@ -1,27 +1,27 @@
 //
-//  JCRecordPlayerView.m
-//  Pods
+//  MPictureDisplayView.m
+//  qyx_flutter_media
 //
-//  Created by zhengjiacheng on 2017/8/31.
-//
+//  Created by huangqiming on 2020/6/29.
 //
 
-#import "JCRecordPlayerView.h"
+#import "MPictureDisplayView.h"
 #import "UIView+JCAddition.h"
-@interface JCRecordPlayerView() 
-@property (nonatomic, strong) CALayer *playerLayer;
-@property (nonatomic, strong) AVPlayer *player;
+@interface MPictureDisplayView()
+@property (nonatomic, strong) UIImageView *imageView;
 
 
 @end
 
-@implementation JCRecordPlayerView
+@implementation MPictureDisplayView
 
-- (CALayer *)playerLayer{
-    AVPlayerLayer *playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.player];
-    playerLayer.frame = self.bounds;
-    playerLayer.videoGravity = AVLayerVideoGravityResize;
-    return playerLayer;
+- (UIImageView *)imageView {
+    if(!_imageView){
+        _imageView = [[UIImageView alloc] initWithFrame:self.bounds];
+        [_imageView setContentMode:UIViewContentModeScaleAspectFit];
+    }
+    return _imageView;
+    
 }
 
 - (void)playerButtons{
@@ -48,15 +48,12 @@
     if (self.confirmBlock) {
         self.confirmBlock();
     }
-    [self.player pause];
-//    [self removeFromSuperview];
 }
 
 - (void)clickCancel{
     if (self.cancelBlock) {
         self.cancelBlock();
     }
-    [self.player pause];
     [self removeFromSuperview];
 }
 
@@ -77,31 +74,12 @@
 
 - (void)setPlayUrl:(NSURL *)playUrl{
     _playUrl = playUrl;
-    if (!self.player) {
-        AVPlayerItem *playerItem = [AVPlayerItem playerItemWithURL:self.playUrl];
-        _player = [AVPlayer playerWithPlayerItem:playerItem];
-        [self addObserverToPlayerItem:playerItem];
-    }
-    [self.layer addSublayer:self.playerLayer];
+    self.imageView.image = [UIImage imageWithData:[NSData dataWithContentsOfURL:playUrl]];
+    [self addSubview:self.imageView];
     if (!_confirmButton) {
         [self playerButtons];
     }
     [self showPlayerButtons];
-    [self.player play];
-}
-
-- (void)playbackFinished:(NSNotification *)notification{
-    [self.player seekToTime:kCMTimeZero];
-    [self.player play];
-}
-
-- (void)addObserverToPlayerItem:(AVPlayerItem *)playerItem{
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playbackFinished:) name:AVPlayerItemDidPlayToEndTimeNotification object:playerItem];
-}
-
-- (void)dealloc{
-    [self.player pause];
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 -(UIImage*) at_imageName:(NSString*)name{

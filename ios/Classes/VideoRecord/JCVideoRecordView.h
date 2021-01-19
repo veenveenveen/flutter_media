@@ -16,6 +16,7 @@ typedef void(^smallVideoBlock)(NSString *coverImagePath,NSString *videoPath);
 
 @property(nonatomic,copy)smallVideoBlock videoBlock;
 @property(nonatomic,strong) NSURL *VIDEO_OUTPUTFILE;
+@property(nonatomic,strong) NSURL *IMAGE_OUTPUTFILE;
 
 @property(nonatomic,copy)NSString * seessionId;
 @property(nonatomic)BOOL isDynamic;

@@ -18,6 +18,9 @@ static const CGFloat KMaxRecordTime = 10;    //最大录制时间
 @property (nonatomic, strong) AVCaptureMovieFileOutput *movieFileOutput;       //视频文件输出
 @property (nonatomic, strong) AVCaptureConnection *captureConnection;          //输入输出对象连接
 
+// 照片输出流对象
+@property (nonatomic, strong) AVCaptureStillImageOutput *stillImageOutput;
+
 @property (nonatomic, strong) NSTimer *timer;
 @property (nonatomic, assign) CGFloat recordTime;                              //录制时间
 @end
@@ -29,6 +32,12 @@ static const CGFloat KMaxRecordTime = 10;    //最大录制时间
     if (self) {
         self.captureSession = [[AVCaptureSession alloc]init];
         self.movieFileOutput = [[AVCaptureMovieFileOutput alloc]init];
+        
+        self.stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
+        // 这是输出流的设置参数AVVideoCodecJPEG参数表示以JPEG的图片格式输出图片
+        NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys:AVVideoCodecJPEG,AVVideoCodecKey, nil];
+        [self.stillImageOutput setOutputSettings:outputSettings];
+        
         //后台播放音频时需要注意加以下代码，否则会获取音频设备失败
         [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord error:nil];
         [[AVAudioSession sharedInstance] setMode:AVAudioSessionModeVideoRecording error:nil];
@@ -145,9 +154,8 @@ static const CGFloat KMaxRecordTime = 10;    //最大录制时间
 - (void)prepareForRecord{
     [self.captureSession beginConfiguration];
     
-    
     //视频采集质量
-    [self.captureSession canSetSessionPreset:AVCaptureSessionPresetMedium] ? [self.captureSession setSessionPreset:AVCaptureSessionPresetMedium] : nil;
+    [self.captureSession canSetSessionPreset:AVCaptureSessionPresetHigh] ? [self.captureSession setSessionPreset:AVCaptureSessionPresetHigh] : nil;
     
     //添加input
     [self.captureSession canAddInput:self.mediaDeviceInput] ? [self.captureSession addInput:self.mediaDeviceInput] : nil;
@@ -155,6 +163,8 @@ static const CGFloat KMaxRecordTime = 10;    //最大录制时间
     
     //添加output
     [self.captureSession canAddOutput:self.movieFileOutput] ? [self.captureSession addOutput:self.movieFileOutput] : nil;
+
+    [self.captureSession canAddOutput:self.stillImageOutput] ? [self.captureSession addOutput:self.stillImageOutput] : nil;
     
     [self.captureSession commitConfiguration];
     
@@ -163,7 +173,6 @@ static const CGFloat KMaxRecordTime = 10;    //最大录制时间
         self.captureConnection.preferredVideoStabilizationMode = AVCaptureVideoStabilizationModeAuto;
     }
     [self.movieFileOutput connectionWithMediaType:AVMediaTypeVideo].videoMirrored = NO;
-    
     [self.captureSession startRunning];
 }
 
@@ -199,6 +208,28 @@ static const CGFloat KMaxRecordTime = 10;    //最大录制时间
         };
     }];
     return swithCameraDevice;
+}
+
+#pragma mark 拍摄图片
+- (void)takePictureToFile:(NSURL *)outPutFile {
+    AVCaptureConnection *videoConnection = [self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
+    if (!videoConnection) {
+        return;
+    }
+    
+    [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler:^(CMSampleBufferRef imageDataSampleBuffer, NSError *error) {
+        if (imageDataSampleBuffer == NULL) {
+            return;
+        }
+        NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
+        [imageData writeToURL:outPutFile atomically:YES];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(captureOutput:didFinishRecordingToOutputFileAtURL:fromConnections:error:isImage:)]) {
+            [self.delegate captureOutput:nil didFinishRecordingToOutputFileAtURL:outPutFile fromConnections:@[] error:error isImage:YES];
+        }
+//        UIImage *image = [UIImage imageWithData:imageData];
+//        NSLog(@"image size = %@", NSStringFromCGSize(image.size));
+//        self.imageShowView.image = image;
+    }];
 }
 
 #pragma mark 开始录制
@@ -288,8 +319,8 @@ static const CGFloat KMaxRecordTime = 10;    //最大录制时间
 //// 录制结束
 -(void)captureOutput:(AVCaptureFileOutput *)captureOutput didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL fromConnections:(NSArray *)connections error:(NSError *)error{
     [self stopTimer];
-    if (self.delegate && [self.delegate respondsToSelector:@selector(captureOutput:didFinishRecordingToOutputFileAtURL:fromConnections:error:)]) {
-        [self.delegate captureOutput:captureOutput didFinishRecordingToOutputFileAtURL:outputFileURL fromConnections:connections error:error];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(captureOutput:didFinishRecordingToOutputFileAtURL:fromConnections:error:isImage:)]) {
+        [self.delegate captureOutput:captureOutput didFinishRecordingToOutputFileAtURL:outputFileURL fromConnections:connections error:error isImage:NO];
     }
     [self.captureSession stopRunning];
 }

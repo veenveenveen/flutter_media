@@ -11,7 +11,7 @@
 #import "UIView+JCAddition.h"
 @protocol JCVideoRecordManagerDelegate <NSObject>
 //录制结束
-- (void)captureOutput:(AVCaptureFileOutput *)captureOutput didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL fromConnections:(NSArray *)connections error:(NSError *)error;
+- (void)captureOutput:(AVCaptureFileOutput *)captureOutput didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL fromConnections:(NSArray *)connections error:(NSError *)error isImage:(BOOL)isImage;
 
 //录制时间
 - (void)recordTimeCurrentTime:(CGFloat)currentTime totalTime:(CGFloat)totalTime;
@@ -21,6 +21,9 @@
 @property (nonatomic, weak) id<JCVideoRecordManagerDelegate> delegate;
 //摄像头视图层
 @property (nonatomic, strong) AVCaptureVideoPreviewLayer *preViewLayer;
+
+// 拍摄图片
+- (void)takePictureToFile:(NSURL *)outPutFile;
 
 // 准备录制
 - (void)prepareForRecord;
@@ -48,7 +51,6 @@
 //- (NSURL*)cacheFilePath:(BOOL)input;
 
 @property(nonatomic,strong)NSURL * videoPath;
-
 
 @end
 

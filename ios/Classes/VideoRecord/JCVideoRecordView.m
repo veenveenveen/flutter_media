@@ -12,10 +12,11 @@
 #import "JCVideoRecordProgressView.h"
 #import <AssetsLibrary/AssetsLibrary.h>
 #import "ATShowAlertView.h"
+#import "MPictureDisplayView.h"
 #define TUIScreenWidth                              [UIScreen mainScreen].bounds.size.width
 #define TRGB(r,g,b)  [UIColor colorWithRed:r/255.0f green:g/255.0f blue:b/255.0f alpha:1.0f];
 #define TUIScreenHeight                             [UIScreen mainScreen].bounds.size.height
-#define  TiPhoneX (TUIScreenWidth == 375.f && TUIScreenHeight == 812.f ? YES : NO)
+#define TiPhoneX (TUIScreenWidth == 375.f && TUIScreenHeight == 812.f ? YES : NO)
 @interface JCVideoRecordView()<JCVideoRecordManagerDelegate>
 @property (nonatomic, strong)JCVideoRecordManager *recorderManager;
 @property (nonatomic, strong) UIView *recordBtn;
@@ -32,6 +33,7 @@
 @property (nonatomic, assign) BOOL videoCompressComplete;
 @property(nonatomic,strong) NSString * videoFileName;
 @property(nonatomic,strong)JCRecordPlayerView *playView;
+@property(nonatomic,strong) MPictureDisplayView *picDisplayView;
 
 @end
 
@@ -39,8 +41,9 @@
 
 -(void)initCachePath{
     NSString *tmpPath = NSTemporaryDirectory();
-
+    
     _VIDEO_OUTPUTFILE = [NSURL fileURLWithPath:[tmpPath stringByAppendingPathComponent:@"tmp.mp4"]];
+    _IMAGE_OUTPUTFILE = [NSURL fileURLWithPath:[tmpPath stringByAppendingPathComponent:@"tmp.jpeg"]];
 }
 -(void)viewDidLoad{
     [super viewDidLoad];
@@ -95,13 +98,13 @@
     [_contentView addGestureRecognizer:tapGesture];
 }
 
-- (void)tapScreen:(UITapGestureRecognizer *)tapGesture{
+- (void)tapScreen:(UITapGestureRecognizer *)tapGesture {
     CGPoint point= [tapGesture locationInView:self.contentView];
     [self setFocusCursorWithPoint:point];
     [self.recorderManager setFoucusWithPoint:point];
 }
 
--(void)setFocusCursorWithPoint:(CGPoint)point{
+-(void)setFocusCursorWithPoint:(CGPoint)point {
     self.focusImageView.center = point;
     self.focusImageView.transform = CGAffineTransformMakeScale(1.5, 1.5);
     [UIView animateWithDuration:0.2 animations:^{
@@ -112,16 +115,16 @@
     }];
 }
 
-- (void)autoHideFocusImageView{
+- (void)autoHideFocusImageView {
     self.focusImageView.alpha = 0;
 }
 
--(void)layoutSubviews{
+-(void)layoutSubviews {
     //    [super layoutSubviews];
     _recorderManager.preViewLayer.frame = self.view.bounds;
 }
 
-- (UIImageView *)focusImageView{
+- (UIImageView *)focusImageView {
     if (!_focusImageView) {
         _focusImageView = [[UIImageView alloc]initWithImage:[self at_imageName:@"record_video_focus"]];
         _focusImageView.alpha = 0;
@@ -134,27 +137,30 @@
     if (!_backButton) {
         _backButton = [UIButton buttonWithType:UIButtonTypeCustom];
         [_backButton setImage:[self at_imageName:@"record_video_back"] forState:UIControlStateNormal];
-        _backButton.frame = CGRectMake(60, self.recordBtn.centerY - 18, 36, 36);
+        _backButton.frame = CGRectMake(50, self.recordBtn.centerY - 18, 36, 36);
         [_backButton addTarget:self action:@selector(clickBackButton) forControlEvents:UIControlEventTouchUpInside];
     }
     return _backButton;
 }
-- (JCVideoRecordProgressView *)progressView{
+
+- (JCVideoRecordProgressView *)progressView {
     if (!_progressView) {
         _progressView = [[JCVideoRecordProgressView alloc] initWithFrame:self.recordBackView.frame];
     }
     return _progressView;
 }
-- (UIButton *)switchCameraButton{
+
+- (UIButton *)switchCameraButton {
     if (!_switchCameraButton) {
         _switchCameraButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        [_switchCameraButton setImage:[UIImage imageNamed:@"record_video_camera"] forState:UIControlStateNormal];
-        _switchCameraButton.frame = CGRectMake(TUIScreenWidth - 20 - 28, TiPhoneX ? 40 : 20, 30, 28);
+        [_switchCameraButton setImage:[self at_imageName:@"record_video_camera"] forState:UIControlStateNormal];
+        _switchCameraButton.frame = CGRectMake(TUIScreenWidth-50-30, self.recordBtn.centerY - 13, 30, 22);
         [_switchCameraButton addTarget:self action:@selector(clickSwitchCamera) forControlEvents:UIControlEventTouchUpInside];
     }
     return _switchCameraButton;
 }
-- (UIView *)recordBackView{
+
+- (UIView *)recordBackView {
     if (!_recordBackView) {
         CGRect rect = self.recordBtn.frame;
         CGFloat gap = 7.5;
@@ -167,7 +173,8 @@
     }
     return _recordBackView;
 }
-- (UILabel *)tipLabel{
+
+- (UILabel *)tipLabel {
     if (!_tipLabel) {
         _tipLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, self.recordBackView.origin.y - 30, TUIScreenWidth, 20)];
         _tipLabel.textAlignment = NSTextAlignmentCenter;
@@ -178,29 +185,45 @@
     return _tipLabel;
 }
 
--(UIView *)recordBtn{
+-(UIView *)recordBtn {
     if (!_recordBtn) {
         _recordBtn = [[UIView alloc]init];
         CGFloat deta = [UIScreen mainScreen].bounds.size.width/375;
         CGFloat width = 60.0*deta;
-        _recordBtn.frame = CGRectMake((TUIScreenWidth - width)/2, TUIScreenHeight - 107*deta, width, width);
+        CGFloat bottomPadding = 0.0;
+        if (@available(iOS 11.0, *)) {
+            UIWindow *window = UIApplication.sharedApplication.keyWindow;
+            CGFloat topPadding = window.safeAreaInsets.top;
+            bottomPadding = window.safeAreaInsets.bottom;
+        }
+        _recordBtn.frame = CGRectMake((TUIScreenWidth - width)/2, TUIScreenHeight - 127*deta - bottomPadding, width, width);
         [_recordBtn.layer setCornerRadius:_recordBtn.frame.size.width/2];
         _recordBtn.backgroundColor = [UIColor whiteColor];
         UILongPressGestureRecognizer *press = [[UILongPressGestureRecognizer alloc]initWithTarget:self action:@selector(startRecord:)];
+        UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(takeCameraPicture:)];
+        [_recordBtn addGestureRecognizer:tap];
         [_recordBtn addGestureRecognizer:press];
         _recordBtn.userInteractionEnabled = YES;
     }
     return _recordBtn;
 }
 #pragma mark - 点击事件
-- (void)clickSwitchCamera{
+- (void)clickSwitchCamera {
     [self.recorderManager switchCamera];
 }
-- (void)clickBackButton{
+- (void)clickBackButton {
     //    [self dismiss:YES];
     [self dismissViewControllerAnimated:YES completion:nil];
 }
 #pragma mark - 开始录制
+
+- (void)takeCameraPicture:(UITapGestureRecognizer *)gesture {
+    [self.recorderManager takePictureToFile:_IMAGE_OUTPUTFILE];
+    self.backButton.hidden = YES;
+    self.tipLabel.hidden = YES;
+    self.switchCameraButton.hidden = YES;
+}
+
 - (void)startRecord:(UILongPressGestureRecognizer *)gesture{
     if (gesture.state == UIGestureRecognizerStateBegan) {
         self.recordVideoUrl = nil;
@@ -235,7 +258,27 @@
     [self.recorderManager stopCurrentVideoRecording];
 }
 #pragma mark - 录制结束循环播放视频
-- (void)showVideo:(NSURL *)playUrl{
+- (void)showVideo:(NSURL *)playUrl isImage:(BOOL) isImage {
+    // 图片预览
+    if(isImage){
+        _picDisplayView = [[MPictureDisplayView alloc] initWithFrame:self.view.bounds];
+        _picDisplayView.backgroundColor = [UIColor blackColor];
+        [_contentView addSubview:_picDisplayView];
+        _picDisplayView.playUrl = playUrl;
+        __weak typeof(self) instance = self;
+        //点击取消还没有让上传操作取消有这个问题
+        _picDisplayView.cancelBlock = ^{
+            [instance clickCancel];
+        };
+        __weak typeof(self) selfWeak = self;
+        _picDisplayView.confirmBlock = ^{
+            [selfWeak sendImageMsg];
+            //防止多次点击保存或者取消按钮
+            selfWeak.picDisplayView.confirmButton.userInteractionEnabled = NO;
+        };
+        return;
+    }
+    // 视频预览
     _playView= [[JCRecordPlayerView alloc]initWithFrame:self.view.bounds];
     _playView.backgroundColor = [UIColor clearColor];
     [_contentView addSubview:_playView];
@@ -244,9 +287,8 @@
     //点击取消还没有让上传操作取消有这个问题
     _playView.cancelBlock = ^{
         [instance clickCancel];
-//        [instance.view hideActivity];
     };
-     __weak typeof(self) selfWeak = self;
+    __weak typeof(self) selfWeak = self;
     _playView.confirmBlock = ^{
         if (!instance.videoCompressComplete) {
             return ;
@@ -254,12 +296,6 @@
         [selfWeak sendVieoMsg];
         //防止多次点击保存或者取消按钮
         selfWeak.playView.confirmButton.userInteractionEnabled = NO;
-        //        selfWeak.playView.cancelButton.userInteractionEnabled = NO;
-        
-        //        if (instance.completionBlock && instance.recordVideoOutPutUrl) {
-        //            instance.completionBlock(instance.recordVideoOutPutUrl);
-        //        }
-        //        [instance dismiss:NO];
     };
 }
 
@@ -280,26 +316,41 @@
         }
     }
 }
-#pragma mark----现在处理视频的
--(void)sendVieoMsg{
-    UIImage * fisrtImage = [self getVideoPreViewImage:_VIDEO_OUTPUTFILE];
-    if (!fisrtImage) {
-        return;
-    }
-    NSData * fisrtImageData  = UIImageJPEGRepresentation(fisrtImage, 0.2f);
-    NSData * videoData  =[NSData dataWithContentsOfURL:self.recordVideoUrl];
-    NSLog(@"videoData-%@",videoData);
-    //    NSData * videoData  =[NSData dataWithContentsOfURL:_VIDEO_OUTPUTFILE];
+#pragma mark----处理视频
+
+-(void)sendImageMsg {
+    NSData * imageData  =[NSData dataWithContentsOfURL:_IMAGE_OUTPUTFILE];
+    NSLog(@"videoData-%@",imageData);
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    [fileManager createFileAtPath:[self getTmpCoverImgPath] contents:fisrtImageData attributes:nil];
+    [fileManager createFileAtPath:[self getTmpCoverImgPath] contents:imageData attributes:nil];
     if (self.videoBlock) {
-        self.videoBlock([self getTmpCoverImgPath], self.recordVideoUrl.path);
+        self.videoBlock([self getTmpCoverImgPath],@"");
     }
 }
 
+-(void)sendVieoMsg {
+    if (self.videoBlock) {
+        self.videoBlock(@"", self.recordVideoUrl.path);
+    }
+    //    视频预览图
+    //    UIImage * fisrtImage = [self getVideoPreViewImage:_VIDEO_OUTPUTFILE];
+    //    if (!fisrtImage) {
+    //        return;
+    //    }
+    //    NSData * fisrtImageData  = UIImageJPEGRepresentation(fisrtImage, 0.2f);
+    //    NSData * videoData  =[NSData dataWithContentsOfURL:self.recordVideoUrl];
+    //    NSLog(@"videoData-%@",videoData);
+    //    //    NSData * videoData  =[NSData dataWithContentsOfURL:_VIDEO_OUTPUTFILE];
+    //    NSFileManager *fileManager = [NSFileManager defaultManager];
+    //    [fileManager createFileAtPath:[self getTmpCoverImgPath] contents:fisrtImageData attributes:nil];
+    //    if (self.videoBlock) {
+    //        self.videoBlock([self getTmpCoverImgPath], self.recordVideoUrl.path);
+    //    }
+}
+
 -(NSString*) getTmpCoverImgPath {
-     NSString *tmpPath = NSTemporaryDirectory();
-   return  [tmpPath stringByAppendingPathComponent:@"conver_tmp.jpg"];
+    NSString *tmpPath = NSTemporaryDirectory();
+    return [tmpPath stringByAppendingPathComponent:@"conver_tmp.jpg"];
 }
 // 获取视频第一帧
 - (UIImage*) getVideoPreViewImage:(NSURL *)path
@@ -338,24 +389,32 @@
 }
 
 #pragma mark - JCVideoRecordManagerDelegate method
-- (void)captureOutput:(AVCaptureFileOutput *)captureOutput didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL fromConnections:(NSArray *)connections error:(NSError *)error{
+- (void)captureOutput:(AVCaptureFileOutput *)captureOutput didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL fromConnections:(NSArray *)connections error:(NSError *)error isImage:(BOOL)isImage {
     [self.progressView setProgress:0];
     if (!error) {
-        //播放视频
+        // 图片
+        if(isImage){
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self showVideo:outputFileURL isImage:YES];
+            });
+            return;
+        }
+        
+        // 播放视频
         self.recordVideoUrl = outputFileURL;
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self showVideo:outputFileURL];
+            [self showVideo:outputFileURL isImage:NO];
         });
         [self compressVideo];
     }
 }
 
-- (void)recordTimeCurrentTime:(CGFloat)currentTime totalTime:(CGFloat)totalTime{
+- (void)recordTimeCurrentTime:(CGFloat)currentTime totalTime:(CGFloat)totalTime {
     self.progressView.totolProgress = totalTime;
     self.progressView.progress = currentTime;
 }
 
-- (void)dealloc{
+- (void)dealloc {
     
 }
 
